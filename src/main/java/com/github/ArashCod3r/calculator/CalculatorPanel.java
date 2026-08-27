@@ -6,19 +6,15 @@ import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.FontMetrics;
-import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.awt.RenderingHints;
 import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.image.BufferedImage;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import javax.swing.BorderFactory;
@@ -58,7 +54,7 @@ public class CalculatorPanel extends PluginPanel
 	private final JButton clearHistoryBtn = new JButton("clear");
 
 	private final CalculatorConfig config;
-	private final CalculatorHistory history = new CalculatorHistory(50);
+	private final CalculatorHistory history;
 
 	private String currentInput = "0";
 	private double storedValue = 0;
@@ -70,6 +66,7 @@ public class CalculatorPanel extends PluginPanel
 	public CalculatorPanel(CalculatorConfig config)
 	{
 		this.config = config;
+		this.history = new CalculatorHistory(config.maxHistory());
 
 		setLayout(new BorderLayout(0, 4));
 		setBorder(new EmptyBorder(6, 6, 6, 6));
@@ -608,24 +605,6 @@ public class CalculatorPanel extends PluginPanel
 			sb.append(".").append(parts[1]);
 		}
 		return prefix + sb.toString();
-	}
-
-	static BufferedImage createIcon()
-	{
-		BufferedImage img = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
-		Graphics2D g = img.createGraphics();
-		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-		g.setColor(ColorScheme.BRAND_ORANGE);
-		g.fillRoundRect(1, 1, 14, 14, 4, 4);
-		g.setColor(Color.BLACK);
-		g.setFont(new Font("SansSerif", Font.BOLD, 10));
-		FontMetrics fm = g.getFontMetrics();
-		String text = "+";
-		int x = (16 - fm.stringWidth(text)) / 2;
-		int y = 14 - fm.getDescent();
-		g.drawString(text, x, y);
-		g.dispose();
-		return img;
 	}
 
 	@Override
