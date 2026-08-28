@@ -7,6 +7,20 @@ import net.runelite.client.config.ConfigItem;
 @ConfigGroup("runelite-calculator")
 public interface CalculatorConfig extends Config
 {
+	String GROUP = "runelite-calculator";
+	String KEY_PRICE_SEARCH = "priceSearchEnabled";
+
+	@ConfigItem(
+		keyName = "priceSearchEnabled",
+		name = "Item Price Search",
+		description = "Search for item prices from the OSRS Wiki and click any price to enter it into the calculator",
+		warning = "This feature submits your IP address to a 3rd-party server not controlled or verified by RuneLite developers"
+	)
+	default boolean priceSearchEnabled()
+	{
+		return false;
+	}
+
 	@ConfigItem(
 		keyName = "historyEnabled",
 		name = "Show History",
