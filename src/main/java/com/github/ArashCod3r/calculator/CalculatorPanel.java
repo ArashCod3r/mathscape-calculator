@@ -65,6 +65,8 @@ public class CalculatorPanel extends PluginPanel
 	static final Color LOW_PRICE_FG = new Color(220, 110, 110);
 	static final Color GE_PRICE_BG = new Color(40, 55, 80);
 	static final Color GE_PRICE_FG = new Color(130, 180, 240);
+	static final Color ALCH_PRICE_BG = new Color(90, 75, 30);
+	static final Color ALCH_PRICE_FG = new Color(255, 215, 0);
 
 	private static final String SEARCH_FONT_NAME = "Arial";
 	static final Font SEARCH_FONT = new Font(SEARCH_FONT_NAME, Font.PLAIN, 13);
@@ -845,11 +847,12 @@ public class CalculatorPanel extends PluginPanel
 			header.add(iconLabel, BorderLayout.WEST);
 			header.add(nameLabel, BorderLayout.CENTER);
 
-			JPanel priceRow = new JPanel(new GridLayout(1, 3, 3, 0));
+			JPanel priceRow = new JPanel(new GridLayout(1, 4, 2, 0));
 			priceRow.setBackground(HISTORY_BG);
 			priceRow.add(new PriceButton(result.high, result.hasHigh(), HIGH_PRICE_BG, "buy", result));
 			priceRow.add(new PriceButton(result.low, result.hasLow(), LOW_PRICE_BG, "sell", result));
 			priceRow.add(new PriceButton(result.gePrice, true, GE_PRICE_BG, "average", result));
+			priceRow.add(new PriceButton(result.highAlch, result.hasAlch(), ALCH_PRICE_BG, "alch", result));
 
 			add(header, BorderLayout.NORTH);
 			add(priceRow, BorderLayout.SOUTH);
@@ -1010,10 +1013,16 @@ setFont(SEARCH_BUTTON_FONT);
 				@Override
 				public void mouseClicked(MouseEvent e)
 				{
-					pendingOp = "";
-					newEntry = true;
 					currentInput = CalculatorPanel.rawFormat(entry.getResult());
-					storedValue = entry.getResult();
+					if (pendingOp.isEmpty())
+					{
+						storedValue = entry.getResult();
+						newEntry = true;
+					}
+					else
+					{
+						newEntry = false;
+					}
 					updateDisplay();
 					setHighlighted(true);
 					refocus();

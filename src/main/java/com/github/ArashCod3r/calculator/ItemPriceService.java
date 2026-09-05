@@ -43,14 +43,16 @@ public class ItemPriceService
 		public final long high;
 		public final long low;
 		public final long gePrice;
+		public final long highAlch;
 
-		private SearchResult(int itemId, String name, long high, long low)
+		private SearchResult(int itemId, String name, long high, long low, long highAlch)
 		{
 			this.itemId = itemId;
 			this.name = name;
 			this.high = high;
 			this.low = low;
 			this.gePrice = high > 0 && low > 0 ? (high + low) / 2 : (high > 0 ? high : low);
+			this.highAlch = highAlch;
 		}
 
 		public boolean hasHigh()
@@ -61,6 +63,11 @@ public class ItemPriceService
 		public boolean hasLow()
 		{
 			return low > 0;
+		}
+
+		public boolean hasAlch()
+		{
+			return highAlch > 0;
 		}
 	}
 
@@ -81,6 +88,7 @@ public class ItemPriceService
 	private volatile Map<Integer, String> itemNames = Collections.emptyMap();
 	private volatile Map<Integer, Long> highByItem = Collections.emptyMap();
 	private volatile Map<Integer, Long> lowByItem = Collections.emptyMap();
+	private volatile Map<Integer, Integer> highAlchByItem = Collections.emptyMap();
 	private volatile long mappingFetchedAt;
 	private volatile long pricesFetchedAt;
 	private CompletableFuture<Void> mappingFuture;
@@ -169,14 +177,21 @@ public class ItemPriceService
 		enqueue(MAPPING_URL, future, body -> {
 			JsonArray array = gson.fromJson(body, JsonArray.class);
 			Map<Integer, String> names = new LinkedHashMap<>(array.size());
+			Map<Integer, Integer> alchs = new LinkedHashMap<>(array.size());
 			for (JsonElement element : array)
 			{
 				JsonObject object = element.getAsJsonObject();
 				names.put(object.get("id").getAsInt(), object.get("name").getAsString());
+				JsonElement ha = object.get("highalch");
+				if (ha != null && !(ha instanceof JsonNull))
+				{
+					alchs.put(object.get("id").getAsInt(), ha.getAsInt());
+				}
 			}
 			synchronized (this)
 			{
 				itemNames = names;
+				highAlchByItem = alchs;
 				mappingFetchedAt = System.currentTimeMillis();
 			}
 			log.debug("Loaded {} item mappings", names.size());
@@ -273,12 +288,13 @@ public class ItemPriceService
 
 			long high = highByItem.getOrDefault(entry.getKey(), -1L);
 			long low = lowByItem.getOrDefault(entry.getKey(), -1L);
-			if (high <= 0 && low <= 0)
+			int highAlch = highAlchByItem.getOrDefault(entry.getKey(), 0);
+			if (high <= 0 && low <= 0 && highAlch <= 0)
 			{
 				continue;
 			}
 
-			SearchResult result = new SearchResult(entry.getKey(), name, high, low);
+			SearchResult result = new SearchResult(entry.getKey(), name, high, low, highAlch);
 			if (lowerName.startsWith(query))
 			{
 				startsWith.add(result);
