@@ -675,10 +675,16 @@ public class CalculatorPanel extends PluginPanel
 				@Override
 				public void mouseClicked(MouseEvent e)
 				{
-					pendingOp = "";
-					newEntry = true;
 					currentInput = CalculatorPanel.rawFormat(entry.getResult());
-					storedValue = entry.getResult();
+					if (pendingOp.isEmpty())
+					{
+						storedValue = entry.getResult();
+						newEntry = true;
+					}
+					else
+					{
+						newEntry = false;
+					}
 					updateDisplay();
 					setHighlighted(true);
 					refocus();
