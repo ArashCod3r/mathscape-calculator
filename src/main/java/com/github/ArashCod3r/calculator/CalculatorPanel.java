@@ -481,6 +481,12 @@ public class CalculatorPanel extends PluginPanel
 		buttonHandlers.put("E", () -> handleClearEntry());
 		buttonHandlers.put("e", () -> handleClearEntry());
 		buttonHandlers.put("_", () -> handleNegate());
+		buttonHandlers.put("k", () -> handleSuffix('k'));
+		buttonHandlers.put("K", () -> handleSuffix('k'));
+		buttonHandlers.put("m", () -> handleSuffix('m'));
+		buttonHandlers.put("M", () -> handleSuffix('m'));
+		buttonHandlers.put("b", () -> handleSuffix('b'));
+		buttonHandlers.put("B", () -> handleSuffix('b'));
 	}
 
 	private void handleDigit(String digit)
@@ -489,6 +495,11 @@ public class CalculatorPanel extends PluginPanel
 		{
 			currentInput = digit;
 			newEntry = false;
+		}
+		else if (hasSuffix(currentInput))
+		{
+			refocus();
+			return;
 		}
 		else
 		{
@@ -508,10 +519,37 @@ public class CalculatorPanel extends PluginPanel
 			currentInput = "0.";
 			newEntry = false;
 		}
+		else if (hasSuffix(currentInput))
+		{
+			refocus();
+			return;
+		}
 		else if (!currentInput.contains("."))
 		{
 			currentInput += ".";
 		}
+		updateDisplay();
+		refocus();
+	}
+
+	private void handleSuffix(char suffix)
+	{
+		if (newEntry || currentInput == null || currentInput.isEmpty() || currentInput.equals("Error"))
+		{
+			refocus();
+			return;
+		}
+		String base = currentInput;
+		if (hasSuffix(base))
+		{
+			base = base.substring(0, base.length() - 1);
+		}
+		if (base.isEmpty())
+		{
+			refocus();
+			return;
+		}
+		currentInput = base + Character.toLowerCase(suffix);
 		updateDisplay();
 		refocus();
 	}
@@ -688,12 +726,40 @@ public class CalculatorPanel extends PluginPanel
 	{
 		try
 		{
+			if (hasSuffix(currentInput))
+			{
+				String number = currentInput.substring(0, currentInput.length() - 1);
+				if (!number.isEmpty())
+				{
+					return clamp(Double.parseDouble(number) * suffixMultiplier(currentInput.charAt(currentInput.length() - 1)));
+				}
+			}
 			return Double.parseDouble(currentInput);
 		}
 		catch (NumberFormatException e)
 		{
 			return 0;
 		}
+	}
+
+	static double suffixMultiplier(char c)
+	{
+		switch (Character.toLowerCase(c))
+		{
+			case 'k':
+				return 1_000d;
+			case 'm':
+				return 1_000_000d;
+			case 'b':
+				return 1_000_000_000d;
+			default:
+				return 0;
+		}
+	}
+
+	static boolean hasSuffix(String s)
+	{
+		return s != null && !s.isEmpty() && suffixMultiplier(s.charAt(s.length() - 1)) > 0;
 	}
 
 	private void updateDisplay()
@@ -707,22 +773,33 @@ public class CalculatorPanel extends PluginPanel
 		{
 			return currentInput;
 		}
-		if (currentInput.contains("."))
+		String suffix = "";
+		String number = currentInput;
+		if (hasSuffix(number))
 		{
-			String[] parts = currentInput.split("\\.");
+			suffix = number.substring(number.length() - 1);
+			number = number.substring(0, number.length() - 1);
+		}
+		if (number.isEmpty())
+		{
+			return suffix;
+		}
+		if (number.contains("."))
+		{
+			String[] parts = number.split("\\.");
 			String intPart = parts[0];
 			String decPart = parts.length == 2 ? parts[1] : "";
 			if (intPart.startsWith("-"))
 			{
-				return "-" + formatWithCommas(intPart.substring(1)) + "." + decPart;
+				return "-" + formatWithCommas(intPart.substring(1)) + "." + decPart + suffix;
 			}
-			return formatWithCommas(intPart) + "." + decPart;
+			return formatWithCommas(intPart) + "." + decPart + suffix;
 		}
-		if (currentInput.startsWith("-"))
+		if (number.startsWith("-"))
 		{
-			return "-" + formatWithCommas(currentInput.substring(1));
+			return "-" + formatWithCommas(number.substring(1)) + suffix;
 		}
-		return formatWithCommas(currentInput);
+		return formatWithCommas(number) + suffix;
 	}
 
 	private void refocus()
