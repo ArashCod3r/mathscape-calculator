@@ -1067,7 +1067,7 @@ setFont(SEARCH_BUTTON_FONT);
 			copyBtn.setMaximumSize(new Dimension(COPY_BTN_WIDTH, ROW_HEIGHT));
 			copyBtn.setMinimumSize(new Dimension(COPY_BTN_WIDTH, ROW_HEIGHT));
 			copyBtn.addActionListener(e -> {
-				String formatted = CalculatorPanel.formatNumber(entry.getResult());
+				String formatted = CalculatorPanel.rawFormat(entry.getResult());
 				StringSelection selection = new StringSelection(formatted);
 				Toolkit.getDefaultToolkit().getSystemClipboard().setContents(selection, null);
 				refocus();
